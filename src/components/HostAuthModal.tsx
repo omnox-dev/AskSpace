@@ -23,11 +23,17 @@ export const HostAuthModal: React.FC<HostAuthModalProps> = ({
       return;
     }
 
-    if (pinInput.trim() === currentRoom.hostPin || pinInput.trim() === '1234') {
+    const masterPassword = import.meta.env.VITE_HOST_ADMIN_PASSWORD || import.meta.env.VITE_HOST_ADMIN_PIN;
+    const trimmedInput = pinInput.trim();
+
+    if (
+      trimmedInput === currentRoom.hostPin ||
+      (masterPassword && trimmedInput === masterPassword)
+    ) {
       onSuccessLogin();
       onClose();
     } else {
-      setErrorMsg('Invalid Host Admin PIN. Default demo PIN is 1234.');
+      setErrorMsg('Invalid Host Admin PIN or Master Password.');
     }
   };
 
@@ -55,7 +61,7 @@ export const HostAuthModal: React.FC<HostAuthModalProps> = ({
               <input
                 type="password"
                 required
-                placeholder="Enter PIN (Demo: 1234)"
+                placeholder="Enter Host PIN or Master Password"
                 value={pinInput}
                 onChange={e => {
                   setPinInput(e.target.value);

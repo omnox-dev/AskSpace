@@ -98,12 +98,13 @@ ask_questions/
    ```bash
    cp .env.example .env.local
    ```
-   Add your optional API keys for Groq or Google Gemini:
+   Add your environment configuration and Host password:
    ```env
    VITE_GROQ_API_KEY=your_groq_api_key_here
    VITE_GEMINI_API_KEY=your_gemini_api_key_here
+   VITE_HOST_ADMIN_PASSWORD=your_secure_host_password_here
    ```
-   > *Note: If no API key is provided, AskSpace automatically uses its built-in offline NLP engine!*
+   > *Note: `VITE_HOST_ADMIN_PASSWORD` sets a master production password for host admin actions. If no API key is provided, AskSpace automatically uses its built-in offline NLP engine!*
 
 4. **Run the Development Server**:
    ```bash

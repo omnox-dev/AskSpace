@@ -1,5 +1,7 @@
 import { Classroom, Question, AiQuestionSet, AiProviderConfig } from '@/types';
 
+const DEFAULT_HOST_PIN = import.meta.env.VITE_HOST_ADMIN_PASSWORD || import.meta.env.VITE_HOST_ADMIN_PIN || 'admin';
+
 const INITIAL_CLASSROOMS: Classroom[] = [
   {
     id: 'room-cs101',
@@ -7,7 +9,7 @@ const INITIAL_CLASSROOMS: Classroom[] = [
     name: 'CS101: Data Structures & Algorithms',
     subject: 'Computer Science',
     hostName: 'Prof. Vance',
-    hostPin: '1234',
+    hostPin: DEFAULT_HOST_PIN,
     createdAt: Date.now() - 86400000 * 2,
     activeStudents: 142,
     isLocked: false,
@@ -18,7 +20,7 @@ const INITIAL_CLASSROOMS: Classroom[] = [
     name: 'Linear Algebra & Matrices',
     subject: 'Mathematics',
     hostName: 'Dr. Evelyn Reed',
-    hostPin: '1234',
+    hostPin: DEFAULT_HOST_PIN,
     createdAt: Date.now() - 86400000,
     activeStudents: 89,
     isLocked: false,
