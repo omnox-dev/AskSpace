@@ -8,7 +8,7 @@ interface Particle {
   size: number;
   density: number;
   hue: number; // Red (350) or Blue (215)
-  activation: number; // 0 (normal ambient) to 1 (fully activated)
+  activation: number; // 0 (ambient) to 1 (activated)
 }
 
 export const ParticleDotGrid: React.FC = () => {
@@ -95,6 +95,7 @@ export const ParticleDotGrid: React.FC = () => {
       time += 0.025;
 
       const isDark = document.documentElement.classList.contains('dark');
+      ctx.shadowBlur = 0; // Solid crisp rendering without neon blur
 
       for (let i = 0; i < particles.length; i++) {
         const p = particles[i];
@@ -129,38 +130,27 @@ export const ParticleDotGrid: React.FC = () => {
         // Grid Dot Activation & Lingering Decay Physics
         if (distance < mouse.colorRadius) {
           const currentFactor = 1 - distance / mouse.colorRadius;
-          // Set activation to highest value when mouse passes
           p.activation = Math.max(p.activation, currentFactor);
         } else {
-          // Lingering decay back to 0 (gradually returns to normal over ~1.5 seconds)
-          p.activation = Math.max(0, p.activation - 0.012);
+          p.activation = Math.max(0, p.activation - 0.015);
         }
 
-        // Render dot based on p.activation factor
         const act = p.activation;
-        let opacity = isDark ? (0.14 + act * 0.8) : (0.18 + act * 0.75);
-        let drawSize = p.size + act * 1.4;
+        let opacity = isDark ? (0.14 + act * 0.86) : (0.18 + act * 0.82);
+        let drawSize = p.size + act * 1.2;
         let fillStyle = '';
 
         if (act > 0.02) {
-          // Active / Lingering Glowing State
-          const saturation = 70 + act * 30;
-          const lightness = isDark ? (50 + act * 25) : (40 + act * 20);
+          // Solid, Crisp Matte Colors
+          const saturation = 90;
+          const lightness = isDark ? (50 + act * 15) : (45 + act * 10);
           fillStyle = `hsla(${p.hue}, ${saturation}%, ${lightness}%, ${opacity.toFixed(2)})`;
-
-          if (act > 0.3) {
-            ctx.shadowBlur = 6 * act;
-            ctx.shadowColor = `hsla(${p.hue}, 90%, 60%, ${(act * 0.8).toFixed(2)})`;
-          } else {
-            ctx.shadowBlur = 0;
-          }
         } else {
           // Normal Ambient State
-          ctx.shadowBlur = 0;
           if (isDark) {
-            fillStyle = `hsla(${p.hue}, 30%, 75%, ${opacity.toFixed(2)})`;
+            fillStyle = `hsla(${p.hue}, 35%, 75%, ${opacity.toFixed(2)})`;
           } else {
-            fillStyle = `hsla(${p.hue}, 30%, 25%, ${opacity.toFixed(2)})`;
+            fillStyle = `hsla(${p.hue}, 35%, 25%, ${opacity.toFixed(2)})`;
           }
         }
 
@@ -169,9 +159,16 @@ export const ParticleDotGrid: React.FC = () => {
         ctx.arc(p.x, p.y, drawSize, 0, Math.PI * 2);
         ctx.closePath();
         ctx.fill();
+
+        // Crisp Solid Black Border Outline for active dots
+        if (act > 0.05) {
+          ctx.lineWidth = 1;
+          ctx.strokeStyle = `rgba(0, 0, 0, ${(Math.min(1, act * 1.2)).toFixed(2)})`;
+          ctx.stroke();
+        }
+
       }
 
-      ctx.shadowBlur = 0;
       animationFrameId = requestAnimationFrame(render);
     };
 

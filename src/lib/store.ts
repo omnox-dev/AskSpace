@@ -1,4 +1,5 @@
 import { Classroom, Question, AiQuestionSet, AiProviderConfig } from '@/types';
+import { queryNeonSql } from './db';
 
 const DEFAULT_HOST_PIN = import.meta.env.VITE_HOST_ADMIN_PASSWORD || import.meta.env.VITE_HOST_ADMIN_PIN || 'admin';
 
@@ -195,6 +196,47 @@ export const saveClassrooms = (rooms: Classroom[]) => {
   }
 };
 
+export const fetchClassroomsFromDb = async (): Promise<Classroom[] | null> => {
+  const rows = await queryNeonSql<any>('SELECT * FROM "Classroom" ORDER BY "createdAt" DESC;');
+  if (!rows) return null;
+  return rows.map(r => ({
+    id: r.id,
+    code: r.code,
+    name: r.name,
+    subject: r.subject,
+    hostName: r.hostName,
+    hostPin: r.hostPin,
+    createdAt: Number(r.createdAt || Date.now()),
+    activeStudents: Number(r.activeStudents || 1),
+    isLocked: Boolean(r.isLocked),
+  }));
+};
+
+export const saveClassroomToDb = async (room: Classroom): Promise<boolean> => {
+  const sql = `
+    INSERT INTO "Classroom" ("id", "code", "name", "subject", "hostName", "hostPin", "activeStudents", "isLocked", "createdAt")
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    ON CONFLICT ("id") DO UPDATE SET
+      "name" = EXCLUDED."name",
+      "subject" = EXCLUDED."subject",
+      "isLocked" = EXCLUDED."isLocked",
+      "activeStudents" = EXCLUDED."activeStudents";
+  `;
+  const params = [
+    room.id,
+    room.code,
+    room.name,
+    room.subject,
+    room.hostName,
+    room.hostPin,
+    room.activeStudents,
+    room.isLocked,
+    room.createdAt
+  ];
+  const res = await queryNeonSql(sql, params);
+  return res !== null;
+};
+
 export const getStoredQuestions = (): Question[] => {
   if (typeof window === 'undefined') return INITIAL_QUESTIONS;
   const stored = localStorage.getItem('askspace_questions');
@@ -213,6 +255,51 @@ export const saveQuestions = (qs: Question[]) => {
   if (typeof window !== 'undefined') {
     localStorage.setItem('askspace_questions', JSON.stringify(qs));
   }
+};
+
+export const fetchQuestionsFromDb = async (): Promise<Question[] | null> => {
+  const rows = await queryNeonSql<any>('SELECT * FROM "Question" ORDER BY "createdAt" DESC;');
+  if (!rows) return null;
+  return rows.map(r => ({
+    id: r.id,
+    classroomId: r.classroomId,
+    authorName: r.authorName,
+    authorIsGuest: Boolean(r.authorIsGuest),
+    content: r.content,
+    topicTag: r.topicTag,
+    upvotes: Number(r.upvotes || 0),
+    upvotedBy: Array.isArray(r.upvotedBy) ? r.upvotedBy : (typeof r.upvotedBy === 'string' ? JSON.parse(r.upvotedBy) : []),
+    status: r.status || 'pending',
+    answer: r.answer || undefined,
+    createdAt: Number(r.createdAt || Date.now()),
+  }));
+};
+
+export const saveQuestionToDb = async (q: Question): Promise<boolean> => {
+  const sql = `
+    INSERT INTO "Question" ("id", "classroomId", "authorName", "authorIsGuest", "content", "topicTag", "upvotes", "upvotedBy", "status", "answer", "createdAt")
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10, $11)
+    ON CONFLICT ("id") DO UPDATE SET
+      "upvotes" = EXCLUDED."upvotes",
+      "upvotedBy" = EXCLUDED."upvotedBy",
+      "status" = EXCLUDED."status",
+      "answer" = EXCLUDED."answer";
+  `;
+  const params = [
+    q.id,
+    q.classroomId,
+    q.authorName,
+    q.authorIsGuest,
+    q.content,
+    q.topicTag,
+    q.upvotes,
+    JSON.stringify(q.upvotedBy || []),
+    q.status,
+    q.answer || null,
+    q.createdAt
+  ];
+  const res = await queryNeonSql(sql, params);
+  return res !== null;
 };
 
 export const getStoredAiSets = (): AiQuestionSet[] => {

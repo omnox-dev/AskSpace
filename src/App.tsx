@@ -17,8 +17,12 @@ import {
 import {
   getStoredClassrooms,
   saveClassrooms,
+  fetchClassroomsFromDb,
+  saveClassroomToDb,
   getStoredQuestions,
   saveQuestions,
+  fetchQuestionsFromDb,
+  saveQuestionToDb,
   getStoredAiSets,
   saveAiSets,
   getStoredAiConfig,
@@ -64,6 +68,21 @@ export default function App() {
     setQuestions(qs);
     setAiSets(sets);
     setAiConfig(cfg);
+
+    // Fetch from Neon Serverless DB if configured
+    fetchClassroomsFromDb().then(dbRooms => {
+      if (dbRooms && dbRooms.length > 0) {
+        setClassrooms(dbRooms);
+        saveClassrooms(dbRooms);
+      }
+    });
+
+    fetchQuestionsFromDb().then(dbQs => {
+      if (dbQs && dbQs.length > 0) {
+        setQuestions(dbQs);
+        saveQuestions(dbQs);
+      }
+    });
   }, []);
 
   // Theme Toggle Handler
@@ -84,6 +103,7 @@ export default function App() {
     const sessionId = getSessionId();
 
     setQuestions(prevQs => {
+      let targetQ: Question | null = null;
       const updated = prevQs.map(q => {
         if (q.id === qId) {
           const hasUpvoted = q.upvotedBy.includes(sessionId);
@@ -98,12 +118,14 @@ export default function App() {
             newUpvotes += 1;
           }
 
-          return { ...q, upvotes: newUpvotes, upvotedBy: newUpvotedBy };
+          targetQ = { ...q, upvotes: newUpvotes, upvotedBy: newUpvotedBy };
+          return targetQ;
         }
         return q;
       });
 
       saveQuestions(updated);
+      if (targetQ) saveQuestionToDb(targetQ);
       return updated;
     });
   };
@@ -128,6 +150,7 @@ export default function App() {
     setQuestions(prevQs => {
       const updated = [newQ, ...prevQs];
       saveQuestions(updated);
+      saveQuestionToDb(newQ);
       return updated;
     });
   };
@@ -144,17 +167,20 @@ export default function App() {
   // Answer Question handler (Host feature)
   const handleAnswerQuestion = (qId: string, answerText: string) => {
     setQuestions(prevQs => {
+      let targetQ: Question | null = null;
       const updated = prevQs.map(q => {
         if (q.id === qId) {
-          return {
+          targetQ = {
             ...q,
             status: 'answered' as const,
             answer: answerText,
           };
+          return targetQ;
         }
         return q;
       });
       saveQuestions(updated);
+      if (targetQ) saveQuestionToDb(targetQ);
       return updated;
     });
   };
@@ -178,6 +204,7 @@ export default function App() {
     const updatedRooms = [newRoom, ...classrooms];
     setClassrooms(updatedRooms);
     saveClassrooms(updatedRooms);
+    saveClassroomToDb(newRoom);
     setCurrentRoom(newRoom);
     setIsHostLoggedIn(true); // Automatically log in creator as host
     setActiveTab('questions');
