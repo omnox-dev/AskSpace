@@ -3,15 +3,14 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 0, 0, 0;
+  --foreground-rgb: 18, 18, 18;
   --background-rgb: 255, 255, 255;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-rgb: 0, 0, 0;
-  }
+.dark {
+  --foreground-rgb: 255, 255, 255;
+  --background-rgb: 18, 18, 18;
+  background-color: #121212 !important;
 }
 
 body {
@@ -20,6 +19,7 @@ body {
   font-family: 'Inter', sans-serif;
   overflow-x: hidden;
 }
+
 
 /* Custom crisp monochrome scrollbars */
 ::-webkit-scrollbar {

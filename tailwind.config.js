@@ -8,6 +8,7 @@ export default {
   theme: {
     extend: {
       colors: {
+        black: '#121212', // Matte Charcoal Dark Mode
         mono: {
           50: '#F9FAFB',
           100: '#F3F4F6',
@@ -22,6 +23,7 @@ export default {
           950: '#030712',
         },
       },
+
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
         mono: ['JetBrains Mono', 'monospace'],

@@ -7,6 +7,7 @@ import { AnalyticsDashboard } from '@/components/AnalyticsDashboard';
 import { HostAuthModal } from '@/components/HostAuthModal';
 import { AiSettingsModal } from '@/components/AiSettingsModal';
 import { HostClassroomList } from '@/components/HostClassroomList';
+import { ParticleDotGrid } from '@/components/ParticleDotGrid';
 import {
   Classroom,
   Question,
@@ -235,8 +236,11 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-white dark:bg-black text-black dark:text-white transition-colors duration-200">
+    <div className="min-h-screen flex flex-col bg-white dark:bg-black text-black dark:text-white transition-colors duration-200 relative overflow-hidden">
       
+      {/* Antigravity Fluid Interactive Dotted Matrix Background */}
+      <ParticleDotGrid />
+
       {/* Sleek Top Navbar */}
       <Navbar
         currentRoom={currentRoom}
@@ -244,8 +248,12 @@ export default function App() {
         setActiveTab={setActiveTab}
         isHostLoggedIn={isHostLoggedIn}
         onOpenHostAuth={() => setShowHostModal(true)}
-        onHostLogout={() => setIsHostLoggedIn(false)}
+        onHostLogout={() => {
+          setIsHostLoggedIn(false);
+          setActiveTab('questions');
+        }}
         onOpenAiSettings={() => setShowAiModal(true)}
+
         onOpenNewRoomModal={() => setShowNewRoomModal(true)}
         aiConfig={aiConfig}
         theme={theme}
@@ -254,8 +262,9 @@ export default function App() {
       />
 
       {/* Main View Router */}
-      <main className="flex-1">
+      <main className="flex-1 relative z-10">
         {activeTab === 'host-classrooms' ? (
+
           <HostClassroomList
             classrooms={classrooms}
             questions={questions}
