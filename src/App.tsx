@@ -6,6 +6,7 @@ import { AiSynthesizerModal } from '@/components/AiSynthesizerModal';
 import { AnalyticsDashboard } from '@/components/AnalyticsDashboard';
 import { HostAuthModal } from '@/components/HostAuthModal';
 import { AiSettingsModal } from '@/components/AiSettingsModal';
+import { HostClassroomList } from '@/components/HostClassroomList';
 import {
   Classroom,
   Question,
@@ -35,7 +36,7 @@ export default function App() {
 
   // Navigation & Active state
   const [currentRoom, setCurrentRoom] = useState<Classroom | null>(null);
-  const [activeTab, setActiveTab] = useState<'questions' | 'analytics' | 'ai-sets'>('questions');
+  const [activeTab, setActiveTab] = useState<'questions' | 'analytics' | 'ai-sets' | 'host-classrooms'>('questions');
   const [isHostLoggedIn, setIsHostLoggedIn] = useState(false);
 
   // Modals state
@@ -62,10 +63,6 @@ export default function App() {
     setQuestions(qs);
     setAiSets(sets);
     setAiConfig(cfg);
-
-    if (rooms.length > 0) {
-      // Classrooms loaded, require code entry on landing page
-    }
   }, []);
 
   // Theme Toggle Handler
@@ -182,6 +179,46 @@ export default function App() {
     saveClassrooms(updatedRooms);
     setCurrentRoom(newRoom);
     setIsHostLoggedIn(true); // Automatically log in creator as host
+    setActiveTab('questions');
+  };
+
+  // Delete Room handler (Host feature)
+  const handleDeleteClassroom = (classroomId: string) => {
+    const updatedRooms = classrooms.filter(c => c.id !== classroomId);
+    setClassrooms(updatedRooms);
+    saveClassrooms(updatedRooms);
+
+    const updatedQs = questions.filter(q => q.classroomId !== classroomId);
+    setQuestions(updatedQs);
+    saveQuestions(updatedQs);
+
+    if (currentRoom?.id === classroomId) {
+      setCurrentRoom(null);
+      setActiveTab('host-classrooms');
+    }
+  };
+
+  // Lock/Unlock Room handler (Host feature)
+  const handleToggleLockClassroom = (classroomId: string) => {
+    const updatedRooms = classrooms.map(c => {
+      if (c.id === classroomId) {
+        return { ...c, isLocked: !c.isLocked };
+      }
+      return c;
+    });
+    setClassrooms(updatedRooms);
+    saveClassrooms(updatedRooms);
+
+    if (currentRoom?.id === classroomId) {
+      setCurrentRoom(prev => prev ? { ...prev, isLocked: !prev.isLocked } : null);
+    }
+  };
+
+  // Enter Room as Host handler
+  const handleSelectRoomAsHost = (room: Classroom) => {
+    setCurrentRoom(room);
+    setIsHostLoggedIn(true);
+    setActiveTab('questions');
   };
 
   // AI Set Created Handler
@@ -213,11 +250,21 @@ export default function App() {
         aiConfig={aiConfig}
         theme={theme}
         onToggleTheme={handleToggleTheme}
+        onGoToHostDashboard={() => setActiveTab('host-classrooms')}
       />
 
       {/* Main View Router */}
       <main className="flex-1">
-        {!currentRoom ? (
+        {activeTab === 'host-classrooms' ? (
+          <HostClassroomList
+            classrooms={classrooms}
+            questions={questions}
+            onSelectRoomAsHost={handleSelectRoomAsHost}
+            onCreateRoom={handleCreateRoom}
+            onToggleLockRoom={handleToggleLockClassroom}
+            onDeleteRoom={handleDeleteClassroom}
+          />
+        ) : !currentRoom ? (
           <ClassroomJoin
             classrooms={classrooms}
             onSelectRoom={room => {
@@ -225,6 +272,13 @@ export default function App() {
               setActiveTab('questions');
             }}
             onCreateRoom={handleCreateRoom}
+            onOpenHostDashboard={() => {
+              if (isHostLoggedIn) {
+                setActiveTab('host-classrooms');
+              } else {
+                setShowHostModal(true);
+              }
+            }}
           />
         ) : (
           <>
@@ -239,12 +293,22 @@ export default function App() {
                   <span>- {currentRoom.name}</span>
                 </div>
 
-                <button
-                  onClick={() => setCurrentRoom(null)}
-                  className="font-bold underline hover:opacity-75 uppercase"
-                >
-                  ← Switch / Exit Room
-                </button>
+                <div className="flex items-center space-x-4">
+                  {isHostLoggedIn && (
+                    <button
+                      onClick={() => setActiveTab('host-classrooms')}
+                      className="font-bold underline hover:opacity-75 uppercase text-black dark:text-white"
+                    >
+                      ❖ Host Classrooms Dashboard
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setCurrentRoom(null)}
+                    className="font-bold underline hover:opacity-75 uppercase"
+                  >
+                    ← Exit Room
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -303,7 +367,12 @@ export default function App() {
       {showHostModal && (
         <HostAuthModal
           currentRoom={currentRoom}
-          onSuccessLogin={() => setIsHostLoggedIn(true)}
+          onSuccessLogin={() => {
+            setIsHostLoggedIn(true);
+            if (!currentRoom) {
+              setActiveTab('host-classrooms');
+            }
+          }}
           onClose={() => setShowHostModal(false)}
         />
       )}
@@ -344,3 +413,4 @@ export default function App() {
     </div>
   );
 }
+

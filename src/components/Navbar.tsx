@@ -1,11 +1,11 @@
 import React from 'react';
-import { Sparkles, BarChart2, Shield, Settings, HelpCircle, LogOut, PlusCircle, Sun, Moon } from 'lucide-react';
+import { Sparkles, BarChart2, Shield, Settings, HelpCircle, LogOut, Sun, Moon, LayoutGrid } from 'lucide-react';
 import { Classroom, AiProviderConfig } from '@/types';
 
 interface NavbarProps {
   currentRoom: Classroom | null;
-  activeTab: 'questions' | 'analytics' | 'ai-sets';
-  setActiveTab: (tab: 'questions' | 'analytics' | 'ai-sets') => void;
+  activeTab: 'questions' | 'analytics' | 'ai-sets' | 'host-classrooms';
+  setActiveTab: (tab: 'questions' | 'analytics' | 'ai-sets' | 'host-classrooms') => void;
   isHostLoggedIn: boolean;
   onOpenHostAuth: () => void;
   onHostLogout: () => void;
@@ -14,6 +14,7 @@ interface NavbarProps {
   aiConfig: AiProviderConfig;
   theme: 'light' | 'dark';
   onToggleTheme: () => void;
+  onGoToHostDashboard: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -28,6 +29,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   aiConfig,
   theme,
   onToggleTheme,
+  onGoToHostDashboard,
 }) => {
   return (
     <header className="sticky top-0 z-40 bg-white dark:bg-black border-b-2 border-black dark:border-white text-black dark:text-white transition-colors">
@@ -36,7 +38,13 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Brand Logo & Room Badge */}
         <div className="flex items-center space-x-4">
           <div 
-            onClick={() => setActiveTab('questions')}
+            onClick={() => {
+              if (currentRoom) {
+                setActiveTab('questions');
+              } else if (isHostLoggedIn) {
+                setActiveTab('host-classrooms');
+              }
+            }}
             className="flex items-center space-x-2 cursor-pointer group"
           >
             <div className="w-8 h-8 bg-black dark:bg-white text-white dark:text-black flex items-center justify-center font-mono font-black text-xl border border-black dark:border-white shadow-sharp-sm dark:shadow-sharp-sm-white group-hover:translate-x-0.5 group-hover:translate-y-0.5 transition-transform">
@@ -56,8 +64,8 @@ export const Navbar: React.FC<NavbarProps> = ({
           )}
         </div>
 
-        {/* Navigation Tabs - STRICT RBAC: Students only see Questions. Host sees AI Sets & Analytics */}
-        {currentRoom && (
+        {/* Navigation Tabs - STRICT RBAC: Students only see Questions. Host sees AI Sets, Analytics & Host Classrooms */}
+        {currentRoom ? (
           <nav className="flex items-center space-x-1 sm:space-x-2">
             <button
               onClick={() => setActiveTab('questions')}
@@ -73,7 +81,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               </span>
             </button>
 
-            {/* ONLY DISPLAY AI SETS AND ANALYTICS TO AUTHENTICATED HOSTS */}
+            {/* ONLY DISPLAY AI SETS, ANALYTICS AND DASHBOARD TO AUTHENTICATED HOSTS */}
             {isHostLoggedIn && (
               <>
                 <button
@@ -103,9 +111,39 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <span>Analytics</span>
                   </span>
                 </button>
+
+                <button
+                  onClick={onGoToHostDashboard}
+                  className={`px-3 py-1.5 text-xs sm:text-sm font-mono font-semibold border transition-all ${
+                    activeTab === 'host-classrooms'
+                      ? 'bg-black text-white dark:bg-white dark:text-black border-black dark:border-white shadow-sharp-sm dark:shadow-sharp-sm-white'
+                      : 'bg-transparent text-black dark:text-white border-transparent hover:border-black dark:hover:border-white'
+                  }`}
+                >
+                  <span className="flex items-center space-x-1.5">
+                    <LayoutGrid className="w-4 h-4" />
+                    <span>Host Dashboard</span>
+                  </span>
+                </button>
               </>
             )}
           </nav>
+        ) : (
+          isHostLoggedIn && (
+            <button
+              onClick={onGoToHostDashboard}
+              className={`px-3 py-1.5 text-xs sm:text-sm font-mono font-semibold border transition-all ${
+                activeTab === 'host-classrooms'
+                  ? 'bg-black text-white dark:bg-white dark:text-black border-black dark:border-white shadow-sharp-sm dark:shadow-sharp-sm-white'
+                  : 'bg-transparent text-black dark:text-white border-transparent hover:border-black dark:hover:border-white'
+              }`}
+            >
+              <span className="flex items-center space-x-1.5">
+                <LayoutGrid className="w-4 h-4" />
+                <span>Host Dashboard</span>
+              </span>
+            </button>
+          )
         )}
 
         {/* Action Controls */}
@@ -140,7 +178,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {isHostLoggedIn ? (
             <div className="flex items-center space-x-1 border border-black dark:border-white px-2.5 py-1.5 text-xs font-mono bg-black text-white dark:bg-white dark:text-black">
               <Shield className="w-3.5 h-3.5" />
-              <span className="font-bold hidden sm:inline">HOST</span>
+              <span className="font-bold hidden sm:inline">HOST MODE</span>
               <button 
                 onClick={onHostLogout} 
                 className="ml-1 hover:opacity-75"
@@ -163,3 +201,4 @@ export const Navbar: React.FC<NavbarProps> = ({
     </header>
   );
 };
+

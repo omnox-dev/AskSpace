@@ -121,7 +121,7 @@ export const QuestionFeed: React.FC<QuestionFeedProps> = ({
     <div className="max-w-6xl mx-auto py-8 px-4 sm:px-6">
       
       {/* Header Banner */}
-      <div className="bg-white dark:bg-black border-2 border-black dark:border-white p-6 mb-8 shadow-sharp dark:shadow-sharp-white flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="bg-white dark:bg-black border-2 border-black dark:border-white p-6 mb-6 shadow-sharp dark:shadow-sharp-white flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <div className="flex items-center space-x-2 mb-1">
             <span className="px-2 py-0.5 bg-black text-white dark:bg-white dark:text-black font-mono font-bold text-xs uppercase">
@@ -130,6 +130,11 @@ export const QuestionFeed: React.FC<QuestionFeedProps> = ({
             <span className="font-mono text-xs text-neutral-500 font-semibold">
               Host: {currentRoom.hostName}
             </span>
+            {currentRoom.isLocked && (
+              <span className="px-2 py-0.5 bg-red-600 text-white font-mono font-bold text-xs uppercase">
+                🔒 LOCKED
+              </span>
+            )}
           </div>
           <h1 className="text-2xl sm:text-3xl font-black font-mono text-black dark:text-white uppercase tracking-tight">
             {currentRoom.name}
@@ -138,11 +143,20 @@ export const QuestionFeed: React.FC<QuestionFeedProps> = ({
 
         <div className="flex flex-wrap items-center gap-3">
           <button
-            onClick={() => setShowPostModal(true)}
-            className="px-5 py-2.5 bg-black text-white dark:bg-white dark:text-black font-mono font-bold text-sm border-2 border-black dark:border-white hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-all flex items-center space-x-2 shadow-sharp-sm dark:shadow-sharp-sm-white"
+            onClick={() => {
+              if (currentRoom.isLocked) return;
+              setShowPostModal(true);
+            }}
+            disabled={currentRoom.isLocked}
+            title={currentRoom.isLocked ? "Classroom is locked by instructor. New questions are disabled." : "Post a question"}
+            className={`px-5 py-2.5 font-mono font-bold text-sm border-2 transition-all flex items-center space-x-2 shadow-sharp-sm dark:shadow-sharp-sm-white ${
+              currentRoom.isLocked
+                ? 'bg-neutral-300 dark:bg-neutral-800 text-neutral-500 border-neutral-400 cursor-not-allowed'
+                : 'bg-black text-white dark:bg-white dark:text-black border-black dark:border-white hover:bg-neutral-800 dark:hover:bg-neutral-200'
+            }`}
           >
             <Plus className="w-4 h-4" />
-            <span>POST A QUESTION</span>
+            <span>{currentRoom.isLocked ? 'ROOM LOCKED' : 'POST A QUESTION'}</span>
           </button>
 
           {/* INSTRUCTOR HOST ACTION BUTTONS */}
@@ -155,6 +169,7 @@ export const QuestionFeed: React.FC<QuestionFeedProps> = ({
                 <Sparkles className="w-4 h-4 text-black dark:text-white" />
                 <span>AI SYNTHESIZE</span>
               </button>
+
 
               <button
                 onClick={handleExportCSV}

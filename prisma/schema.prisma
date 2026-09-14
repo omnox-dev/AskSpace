@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Classroom {
+  id             String          @id @default(cuid())
+  code           String          @unique
+  name           String
+  subject        String
+  hostName       String
+  hostPin        String
+  activeStudents Int             @default(1)
+  isLocked       Boolean         @default(false)
+  createdAt      BigInt          @default(0)
+  questions      Question[]
+  aiSets         AiQuestionSet[]
+}
+
+model Question {
+  id            String    @id @default(cuid())
+  classroomId   String
+  authorName    String
+  authorIsGuest Boolean   @default(true)
+  content       String    @db.Text
+  topicTag      String
+  upvotes       Int       @default(0)
+  upvotedBy     Json      @default("[]")
+  status        String    @default("pending") // 'pending' | 'answered' | 'flagged'
+  answer        String?   @db.Text
+  createdAt     BigInt    @default(0)
+
+  classroom     Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+}
+
+model AiQuestionSet {
+  id                  String    @id @default(cuid())
+  classroomId         String
+  title               String
+  summary             String    @db.Text
+  totalInputQuestions Int       @default(0)
+  topConfusions       Json      @default("[]")
+  items               Json      @default("[]")
+  createdAt           BigInt    @default(0)
+
+  classroom           Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+}

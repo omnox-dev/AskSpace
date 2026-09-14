@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
-import { ArrowRight, Lock, Plus, Shield } from 'lucide-react';
+import { ArrowRight, Lock, Plus, Shield, LayoutGrid } from 'lucide-react';
 import { Classroom } from '@/types';
 
 interface ClassroomJoinProps {
   classrooms: Classroom[];
   onSelectRoom: (room: Classroom) => void;
   onCreateRoom: (name: string, subject: string, hostName: string, pin: string) => void;
+  onOpenHostDashboard?: () => void;
 }
 
 export const ClassroomJoin: React.FC<ClassroomJoinProps> = ({
   classrooms,
   onSelectRoom,
   onCreateRoom,
+  onOpenHostDashboard,
 }) => {
   const [inputCode, setInputCode] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
@@ -63,7 +65,7 @@ export const ClassroomJoin: React.FC<ClassroomJoinProps> = ({
           ENTER <span className="bg-black text-white dark:bg-white dark:text-black px-2 py-0.5">CLASSROOM</span>
         </h1>
         <p className="text-sm text-neutral-600 dark:text-neutral-300 font-sans">
-          Enter the secret 6-digit code provided by your professor or instructor to join the live Q&A session.
+          Enter the secret code provided by your professor or instructor to join the live Q&A session.
         </p>
       </div>
 
@@ -106,18 +108,30 @@ export const ClassroomJoin: React.FC<ClassroomJoinProps> = ({
       </div>
 
       {/* Host / Instructor Section */}
-      <div className="text-center border-t-2 border-black dark:border-white pt-6">
-        <button
-          onClick={() => setShowCreate(!showCreate)}
-          className="font-mono text-xs font-bold underline underline-offset-4 hover:opacity-75 uppercase text-neutral-700 dark:text-neutral-300 flex items-center justify-center space-x-1 mx-auto"
-        >
-          <Shield className="w-3.5 h-3.5" />
-          <span>{showCreate ? 'Close Host Portal' : 'Are you an Instructor? Create a Classroom'}</span>
-        </button>
+      <div className="text-center border-t-2 border-black dark:border-white pt-6 space-y-3">
+        <div className="flex flex-wrap justify-center items-center gap-4">
+          <button
+            onClick={() => setShowCreate(!showCreate)}
+            className="font-mono text-xs font-bold underline underline-offset-4 hover:opacity-75 uppercase text-neutral-700 dark:text-neutral-300 flex items-center space-x-1"
+          >
+            <Shield className="w-3.5 h-3.5" />
+            <span>{showCreate ? 'Close Host Form' : 'Are you an Instructor? Create a Classroom'}</span>
+          </button>
+
+          {onOpenHostDashboard && (
+            <button
+              onClick={onOpenHostDashboard}
+              className="font-mono text-xs font-bold bg-neutral-100 dark:bg-neutral-900 border border-black dark:border-white px-3 py-1 hover:bg-neutral-200 dark:hover:bg-neutral-800 transition-colors uppercase flex items-center space-x-1"
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              <span>Go to Host Classrooms Dashboard</span>
+            </button>
+          )}
+        </div>
 
         {/* Instructor Room Creation Form */}
         {showCreate && (
-          <form onSubmit={handleCreateSubmit} className="mt-6 text-left p-6 border-2 border-black dark:border-white bg-neutral-50 dark:bg-neutral-900 space-y-4 shadow-sharp-sm dark:shadow-sharp-sm-white">
+          <form onSubmit={handleCreateSubmit} className="mt-6 text-left p-6 border-2 border-black dark:border-white bg-neutral-50 dark:bg-neutral-900 space-y-4 shadow-sharp-sm dark:shadow-sharp-sm-white font-mono">
             <div className="font-mono font-bold text-sm uppercase flex items-center space-x-2 border-b border-black dark:border-white pb-2">
               <Plus className="w-4 h-4" />
               <span>Create New Private Classroom</span>
@@ -183,3 +197,4 @@ export const ClassroomJoin: React.FC<ClassroomJoinProps> = ({
     </div>
   );
 };
+

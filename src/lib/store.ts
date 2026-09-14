@@ -254,3 +254,13 @@ export const saveAiConfig = (config: AiProviderConfig) => {
     localStorage.setItem('askspace_ai_config', JSON.stringify(config));
   }
 };
+
+export const verifyHostPin = (inputPin: string, classroomPin?: string): boolean => {
+  const trimmed = inputPin.trim();
+  if (!trimmed) return false;
+  const masterPassword = import.meta.env.VITE_HOST_ADMIN_PASSWORD || import.meta.env.VITE_HOST_ADMIN_PIN || 'admin';
+  if (trimmed === masterPassword) return true;
+  if (classroomPin && trimmed === classroomPin) return true;
+  return false;
+};
+

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Shield, KeyRound } from 'lucide-react';
 import { Classroom } from '@/types';
+import { verifyHostPin } from '@/lib/store';
 
 interface HostAuthModalProps {
   currentRoom: Classroom | null;
@@ -18,18 +19,10 @@ export const HostAuthModal: React.FC<HostAuthModalProps> = ({
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!currentRoom) {
-      setErrorMsg('No active classroom selected.');
-      return;
-    }
+    
+    const isValid = verifyHostPin(pinInput, currentRoom?.hostPin);
 
-    const masterPassword = import.meta.env.VITE_HOST_ADMIN_PASSWORD || import.meta.env.VITE_HOST_ADMIN_PIN;
-    const trimmedInput = pinInput.trim();
-
-    if (
-      trimmedInput === currentRoom.hostPin ||
-      (masterPassword && trimmedInput === masterPassword)
-    ) {
+    if (isValid) {
       onSuccessLogin();
       onClose();
     } else {
@@ -50,7 +43,11 @@ export const HostAuthModal: React.FC<HostAuthModalProps> = ({
         </div>
 
         <p className="text-xs font-sans text-neutral-600 dark:text-neutral-400">
-          Enter the Host PIN for <strong>{currentRoom?.name || 'Classroom'}</strong> to manage questions, post official answers, and clear rooms.
+          {currentRoom ? (
+            <>Enter the Host PIN for <strong>{currentRoom.name}</strong> or Master Password to access host controls.</>
+          ) : (
+            <>Enter the Master Host PIN or Admin Password (default: <strong>admin</strong>) to access the Host Classrooms Dashboard.</>
+          )}
         </p>
 
         <form onSubmit={handleLogin} className="space-y-4">
@@ -98,3 +95,4 @@ export const HostAuthModal: React.FC<HostAuthModalProps> = ({
     </div>
   );
 };
+
